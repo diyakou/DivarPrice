@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نمایش آگهی‌ها</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        /* CSS برای انیمیشن تایپینگ */
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #d4af37; }
+        }
+        
+        #loadingMessage {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            color: #d4af37;
+            animation: typing 3s steps(40, end), blink-caret .75s step-end infinite;
+        }
+        
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Alert Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .close {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .alert-golden {
+            color: #856404;
+            background-color: #fff3cd;
+            border-color: #ffeeba;
+            padding: 15px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-black text-center text-white">
+
+    <!-- Header -->
+    <header class="bg-gray-800 py-4 mb-8 shadow-md">
+        <div class="container mx-auto px-4 flex items-center justify-between">
+            <a href="#" class="text-golden-500 text-2xl font-bold hover:text-golden-700">نمایش آگهی‌ها</a>
+            <nav>
+                <ul class="flex space-x-6 rtl">
+                    <li><a href="#" class="text-white hover:text-golden-500">خانه</a></li>
+                    <li><a href="#" class="text-white hover:text-golden-500">درباره ما</a></li>
+                    <li><a href="#" class="text-white hover:text-golden-500">تماس با ما</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="glass rounded-lg shadow p-6">
+            <form id="searchForm" class="mb-4">
+                <div class="mb-4 text-right">
+                    <label for="product" class="block text-golden-500 text-sm font-bold mb-2">محصول</label>
+                    <input class="bg-black text-white w-full py-2 px-4 rounded" type="text" id="product" name="product" class="form-input">
+                </div>
+                <div class="mb-4 text-right">
+                    <label for="model" class="block text-golden-500 text-sm font-bold mb-2">مدل</label>
+                    <input class="bg-black text-white w-full py-2 px-4 rounded" type="text" id="model" name="model" class="form-input">
+                </div>
+                <div class="mb-4 text-right">
+                    <label for="city" class="block text-golden-500 text-sm font-bold mb-2">شهر</label>
+                    <input type="text" class="bg-black text-white w-full py-2 px-4 rounded" id="city" name="city" class="form-input">
+                </div>
+                <button type="submit" class="bg-golden-500 hover:bg-golden-700 text-white font-bold py-2 px-4 rounded">
+                    جستجو
+                </button>
+            </form>
+            <!-- متن لودینگ با انیمیشن تایپینگ -->
+            <div id="loadingMessage" class="px-4 py-2">
+                <span>در حال بارگیری</span><span class="ml-2">...</span>
+            </div>
+
+            <div id="products" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8">
+                <!-- نتایج جستجو اینجا نمایش داده خواهند شد -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Structure -->
+    <div id="modalAveragePrice" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modalAveragePrice')">&times;</span>
+            <div id="averagePriceContent" class="alert-golden"></div>
+        </div>
+    </div>
+
+    <div id="modalRealValue" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modalRealValue')">&times;</span>
+            <div id="realValueContent" class="alert-golden"></div>
+        </div>
+    </div>
+
+    <script>
+        const searchForm = document.getElementById('searchForm');
+        const resultsDiv = document.getElementById('products');
+        const loadingMessage = document.getElementById('loadingMessage');
+    
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // نمایش پیام لودینگ
+            loadingMessage.style.display = 'block';
+
+            const product = document.getElementById('product').value;
+            const city = document.getElementById('city').value; 
+            const model = document.getElementById('model').value;
+            console.log(model)
+            
+            const response = await fetch(`http://localhost:5000/${city}/${product}/${model}`, {
+                method: 'POST',
+                headers: {
+                    'Access-Control-Allow-Origin':'*'
+                },
+            });
+
+            const data = await response.json();
+            
+            loadingMessage.style.display = 'none';
+
+            displayResults(data);
+        });
+
+        function displayResults(data) {
+            resultsDiv.innerHTML = '';
+
+            // Show average price in modal
+            const averagePriceContent = document.getElementById('averagePriceContent');
+            averagePriceContent.textContent = `قیمت میانگین: ${data.final_res}`;
+            showModal('modalAveragePrice');
+
+            // Show real value in modal
+            const realValueContent = document.getElementById('realValueContent');
+            realValueContent.textContent = `قیمت واقعی: ${data.fin}`;
+            showModal('modalRealValue');
+
+            data.js_d.forEach(ad => {
+                const adCard = document.createElement('div');
+                adCard.classList.add('ad-card', 'glass', 'p-4', 'mb-4', 'transition', 'duration-300', 'ease-in-out');
+
+                const adLink = document.createElement('a');
+                adLink.href = ad.link;
+                adLink.target = '_blank';
+                adLink.classList.add('text-golden-500', 'hover:underline', 'text-lg', 'font-semibold');
+                adLink.textContent = ad.title;
+                adCard.appendChild(adLink);
+
+                const adPrice = document.createElement('p');
+                adPrice.classList.add('text-white');
+                adPrice.textContent = ad.price;
+                adCard.appendChild(adPrice);
+
+                const adDescription = document.createElement('p');
+                adDescription.classList.add('text-white');
+                adDescription.textContent = ad.description;
+                adCard.appendChild(adDescription);
+
+                const adImage = document.createElement('img');
+                adImage.src = ad.img;
+                adImage.alt = ad.title;
+                adImage.classList.add('w-full', 'h-40', 'object-cover', 'mt-4', 'rounded');
+                adCard.appendChild(adImage);
+
+                resultsDiv.appendChild(adCard);
+            });
+        }
+
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = "block";
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = "none";
+        }
+    </script>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-6 border-t border-gray-700 mt-8">
+        <div class="container mx-auto px-4 text-white">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-center md:text-right">
+                    <p class="text-golden-500 font-bold text-lg mb-2">نمایش آگهی‌ها</p>
+                    <p>© 2024 تمامی حقوق محفوظ است.</p>
+                </div>
+                <div class="flex space-x-4 mt-4 md:mt-0 rtl">
+                    <a href="#" class="text-white hover:text-golden-500" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="text-white hover:text-golden-500" title="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-white hover:text-golden-500" title="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-white hover:text-golden-500" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

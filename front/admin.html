@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ویرایش اطلاعات</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            text-align: center;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="mt-4 mb-3">ویرایش اطلاعات</h2>
+        <form id="editForm">
+            <div class="form-group">
+                <label for="lostColor">رنگ از دست رفته:</label>
+                <input type="text" class="form-control" id="lostColor" name="lostColor" placeholder="رنگ از دست رفته">
+            </div>
+            <div class="form-group">
+                <label for="carAccident">تعداد تصادف‌ها:</label>
+                <input type="number" class="form-control" id="carAccident" name="carAccident" placeholder="تعداد تصادف‌ها">
+            </div>
+            <button type="submit" class="btn btn-primary">ثبت</button>
+        </form>
+        <div id="result" class="mt-4"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#editForm').submit(function (event) {
+                event.preventDefault();
+                var lostColor = $('#lostColor').val();
+                var carAccident = $('#carAccident').val();
+                $.ajax({
+                    url: 'http://127.0.0.1:5000/edit/' + lostColor + '/' + carAccident,
+                    type: 'POST',
+                    success: function (response) {
+                        $('#result').html('<p class="text-success">' + response + '</p>');
+                    },
+                    error: function (error) {
+                        $('#result').html('<p class="text-danger">خطا: ' + error.responseText + '</p>');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
