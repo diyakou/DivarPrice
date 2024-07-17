@@ -67,4 +67,4 @@ python main.py
 # حمایت
 
 از طریق لینک زیر میتونید از برنامه نویس پروژه حمایت کنید 
-- [ZarinPal](zarinp.al/codehami)
+- [ZarinPal](https://zarinp.al/codehami)
